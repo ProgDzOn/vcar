@@ -686,28 +686,28 @@
             <form id="orderForm">
               <div class="row">
                 <div class="col-md-6 mb-3">
-                  <label class="form-label">الاسم الكامل</label>
-                  <input type="text" name="nom" class="form-control" required>
+                  <label for="fullName" class="form-label">الاسم الكامل</label>
+                  <input type="text" id="fullName" name="nom" class="form-control" required>
                 </div>
                 <div class="col-md-6 mb-3">
-                  <label class="form-label">رقم الهاتف</label>
-                  <input type="tel" name="telephone" class="form-control" required>
+                  <label for="phone" class="form-label">رقم الهاتف</label>
+                  <input type="tel" id="phone" name="telephone" class="form-control" required>
                 </div>
               </div>
               
               <div class="mb-3">
-                <label class="form-label">البريد الإلكتروني</label>
-                <input type="email" name="email" class="form-control" required>
+                <label for="email" class="form-label">البريد الإلكتروني</label>
+                <input type="email" id="email" name="email" class="form-control" required>
               </div>
               
               <div class="mb-3">
-                <label class="form-label">السيارة المطلوبة</label>
-                <input type="text" name="voiture" id="carInput" class="form-control" readonly>
+                <label for="carInput" class="form-label">السيارة المطلوبة</label>
+                <input type="text" id="carInput" name="voiture" class="form-control" readonly>
               </div>
               
               <div class="mb-3">
-                <label class="form-label">الولاية</label>
-                <select name="wilaya" class="form-select" required>
+                <label for="wilaya" class="form-label">الولاية</label>
+                <select id="wilaya" name="wilaya" class="form-select" required>
                   <option value="" disabled selected>اختر ولايتك</option>
                   <option value="الجزائر">الجزائر</option>
                   <option value="وهران">وهران</option>
@@ -743,8 +743,8 @@
               </div>
               
               <div class="mb-3">
-                <label class="form-label">طريقة الدفع المفضلة</label>
-                <select name="payment" class="form-select">
+                <label for="payment" class="form-label">طريقة الدفع المفضلة</label>
+                <select id="payment" name="payment" class="form-select">
                   <option value="نقدا">نقدا</option>
                   <option value="تقسيط">تقسيط</option>
                   <option value="تمويل بنكي">تمويل بنكي</option>
@@ -752,8 +752,8 @@
               </div>
               
               <div class="mb-4">
-                <label class="form-label">ملاحظات إضافية</label>
-                <textarea name="message" class="form-control" rows="3"></textarea>
+                <label for="message" class="form-label">ملاحظات إضافية</label>
+                <textarea id="message" name="message" class="form-control" rows="3"></textarea>
               </div>
               
               <div class="d-grid">
@@ -789,19 +789,19 @@
         <div class="col-md-4">
           <h4 class="mb-4">تابعنا على</h4>
           <div class="social-icons">
-            <a href="https://wa.me/213123456789" class="social-icon" target="_blank">
+            <a href="https://wa.me/213123456789" class="social-icon" target="_blank" rel="noopener noreferrer">
               <i class="fab fa-whatsapp"></i>
             </a>
-            <a href="https://facebook.com/automarket" class="social-icon" target="_blank">
+            <a href="https://facebook.com/automarket" class="social-icon" target="_blank" rel="noopener noreferrer">
               <i class="fab fa-facebook-f"></i>
             </a>
-            <a href="https://instagram.com/automarket" class="social-icon" target="_blank">
+            <a href="https://instagram.com/automarket" class="social-icon" target="_blank" rel="noopener noreferrer">
               <i class="fab fa-instagram"></i>
             </a>
-            <a href="https://t.me/automarket" class="social-icon" target="_blank">
+            <a href="https://t.me/automarket" class="social-icon" target="_blank" rel="noopener noreferrer">
               <i class="fab fa-telegram-plane"></i>
             </a>
-            <a href="https://youtube.com/automarket" class="social-icon" target="_blank">
+            <a href="https://youtube.com/automarket" class="social-icon" target="_blank" rel="noopener noreferrer">
               <i class="fab fa-youtube"></i>
             </a>
           </div>
@@ -858,13 +858,13 @@
         </div>
       </div>
       <div class="copyright">
-        <p>© 2023 أوتو ماركت. جميع الحقوق محفوظة.</p>
+        <p>© <span id="currentYear"></span> أوتو ماركت. جميع الحقوق محفوظة.</p>
       </div>
     </div>
   </footer>
 
   <!-- زر الواتساب العائم -->
-  <a href="https://wa.me/213123456789" class="floating-whatsapp" target="_blank">
+  <a href="https://wa.me/213123456789" class="floating-whatsapp" target="_blank" rel="noopener noreferrer">
     <i class="fab fa-whatsapp"></i>
   </a>
 
@@ -893,6 +893,12 @@
       
       fetch(scriptURL, { method: 'POST', body: form })
         .then(response => {
+          if (!response.ok) {
+            throw new Error('Network response was not ok');
+          }
+          return response.json();
+        })
+        .then(data => {
           document.getElementById("responseMsg").innerHTML = `
             <div class="alert alert-success alert-dismissible fade show" role="alert">
               <strong>✅ تم إرسال طلبك بنجاح!</strong> سيتصل بك أحد ممثلينا خلال 24 ساعة.
@@ -933,6 +939,9 @@
         .then(data => console.log('Telegram notification sent:', data))
         .catch(error => console.error('Error sending Telegram notification:', error));
     }
+    
+    // تحديث سنة حقوق النشر تلقائياً
+    document.getElementById('currentYear').textContent = new Date().getFullYear();
   </script>
 </body>
 </html>
