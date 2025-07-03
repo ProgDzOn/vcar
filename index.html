@@ -870,14 +870,16 @@
 
   <!-- السكريبتات -->
 <script>
-  // رابط Google Script
+  // رابط Google Script (استبدل بآخر نشر لك)
   const scriptURL = 'https://script.google.com/macros/s/AKfycbwY366aZLAY-kkp0pRzcCPJ74O9gcNHll8ga52AzJWKMS_j0PNiWVtubSdw4tbYfnM7vQ/exec';
   const secretKey = 'AutoMarket_Algeria_2023@SECURE';
 
-  // تحديد السيارة
+  // تحديد السيارة المطلوبة
   function selectCar(carName) {
     document.getElementById("carInput").value = carName;
-    document.getElementById("contact").scrollIntoView({ behavior: 'smooth' });
+    document.getElementById("contact").scrollIntoView({ 
+      behavior: 'smooth' 
+    });
   }
   
   // إرسال النموذج
@@ -885,12 +887,15 @@
     e.preventDefault();
     const form = e.target;
     const submitBtn = form.querySelector('button[type="submit"]');
-    const originalBtnText = submitBtn.innerHTML;
+    const responseDiv = document.getElementById("responseMsg");
     
     try {
-      submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> جاري الإرسال...';
+      // عرض حالة التحميل
       submitBtn.disabled = true;
+      submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الإرسال...';
+      responseDiv.innerHTML = '';
       
+      // تجهيز البيانات
       const formData = {
         key: secretKey,
         nom: form.nom.value,
@@ -902,6 +907,7 @@
         message: form.message.value
       };
 
+      // إرسال البيانات
       const response = await fetch(scriptURL, {
         method: 'POST',
         headers: {
@@ -909,43 +915,52 @@
         },
         body: JSON.stringify(formData)
       });
-
-      if (!response.ok) throw new Error('Network error');
       
-      const data = await response.json();
+      if (!response.ok) {
+        throw new Error('فشل في الاتصال بالخادم');
+      }
       
-      if (data.status !== 'success') throw new Error(data.message);
+      const result = await response.json();
       
-      document.getElementById("responseMsg").innerHTML = `
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-          <strong>✅ ${data.message}</strong>
-          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      if (result.status !== 'success') {
+        throw new Error(result.message);
+      }
+      
+      // عرض رسالة النجاح
+      responseDiv.innerHTML = `
+        <div class="alert alert-success alert-dismissible fade show">
+          <strong>✅ ${result.message}</strong>
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
       `;
       
+      // إعادة تعيين النموذج
       form.reset();
       
-      // إرسال واتساب (اختياري)
+      // إرسال رسالة واتساب (اختياري)
       const whatsappUrl = `https://wa.me/${formData.telephone.replace(/\D/g, '')}?text=${encodeURIComponent(
-        `مرحباً ${formData.nom}، شكراً لاهتمامك بسيارة ${formData.voiture}. سنتصل بك قريباً.`
+        `مرحباً ${formData.nom}، شكراً لحجزك ${formData.voiture}. سنتصل بك قريباً.`
       )}`;
       // window.open(whatsappUrl, '_blank');
-
+      
     } catch (error) {
-      document.getElementById("responseMsg").innerHTML = `
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-          <strong>❌ ${error.message || 'حدث خطأ أثناء الإرسال'}</strong>
-          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      // عرض رسالة الخطأ
+      responseDiv.innerHTML = `
+        <div class="alert alert-danger alert-dismissible fade show">
+          <strong>❌ ${error.message}</strong>
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
       `;
       console.error('Error:', error);
+      
     } finally {
-      submitBtn.innerHTML = originalBtnText;
+      // إعادة تعيين الزر
       submitBtn.disabled = false;
+      submitBtn.innerHTML = 'إرسال الطلب';
     }
   });
 
-  // تحديث سنة حقوق النشر
+  // تحديث سنة حقوق النشر تلقائياً
   document.getElementById('currentYear').textContent = new Date().getFullYear();
 </script>
 </body>
