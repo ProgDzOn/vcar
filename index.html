@@ -869,41 +869,51 @@
   </a>
 
   <!-- السكريبتات -->
-    </script> 
-  document.getElementById('orderForm').addEventListener('submit', function(e) {
-  e.preventDefault();
-  const form = e.target;
-  const submitBtn = form.querySelector('button[type="submit"]');
-  
-  submitBtn.disabled = true;
-  submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الإرسال...';
+   
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  const scriptURL = 'https://script.google.com/macros/s/AKfycbzLtdl6SwBiKN-KVwdB0d0eUhc1s1mZvYxKKZEi97K1S775wJzw2vkyWVp-RFcEkOanZw/exec';
 
-  const formData = new URLSearchParams();
-  formData.append('nom', form.nom.value);
-  formData.append('telephone', form.telephone.value);
-  formData.append('email', form.email.value);
-  formData.append('voiture', form.voiture.value);
-  formData.append('wilaya', form.wilaya.value);
-  formData.append('payment', form.payment.value);
-  formData.append('message', form.message.value);
+  document.getElementById('registrationForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const form = e.target;
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const originalBtnText = submitBtn.innerHTML;
+    const messageDiv = document.getElementById('formMessage');
+    
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> جاري الإرسال...';
+    messageDiv.classList.add('d-none');
 
-  fetch('https://script.google.com/macros/s/AKfycbzLtdl6SwBiKN-KVwdB0d0eUhc1s1mZvYxKKZEi97K1S775wJzw2vkyWVp-RFcEkOanZw/exec', {
-    method: 'POST',
-    body: formData
-  })
-  .then(response => response.json())
-  .then(data => {
-    alert(data.message + '\nرقم الطلب: ' + data.reference);
-    form.reset();
-  })
-  .catch(error => {
-    alert('حدث خطأ: ' + error.message);
-  })
-  .finally(() => {
-    submitBtn.disabled = false;
-    submitBtn.innerHTML = 'إرسال الطلب';
+    try {
+      const formData = new FormData(form);
+      const response = await fetch(scriptURL, {
+        method: 'POST',
+        body: formData
+      });
+
+      if (response.ok) {
+        messageDiv.classList.remove('d-none', 'alert-danger');
+        messageDiv.classList.add('alert-success');
+        messageDiv.innerHTML = '<i class="fas fa-check-circle me-2"></i> تم التسجيل بنجاح! سنتصل بك قريباً.';
+        form.reset();
+      } else {
+        throw new Error('فشل في إرسال البيانات');
+      }
+    } catch (error) {
+      messageDiv.classList.remove('d-none', 'alert-success');
+      messageDiv.classList.add('alert-danger');
+      messageDiv.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i> حدث خطأ أثناء الإرسال. يرجى المحاولة مرة أخرى.';
+    } finally {
+      submitBtn.innerHTML = originalBtnText;
+      submitBtn.disabled = false;
+    }
   });
-});
-  </script> 
+
+  // Validate phone number
+  document.querySelector('input[name="phone"]').addEventListener('input', function(e) {
+    this.value = this.value.replace(/[^0-9+]/g, '');
+  });
+</script>
 </body>
 </html>
