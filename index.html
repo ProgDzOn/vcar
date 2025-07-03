@@ -869,79 +869,84 @@
   </a>
 
   <!-- السكريبتات -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-  <script>
-    // رابط Google Script الخاص بك
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbwY366aZLAY-kkp0pRzcCPJ74O9gcNHll8ga52AzJWKMS_j0PNiWVtubSdw4tbYfnM7vQ/exec';
+<script>
+  // رابط Google Script
+  const scriptURL = 'https://script.google.com/macros/s/AKfycbwY366aZLAY-kkp0pRzcCPJ74O9gcNHll8ga52AzJWKMS_j0PNiWVtubSdw4tbYfnM7vQ/exec';
+  const secretKey = 'AutoMarket_Algeria_2023@SECURE';
+
+  // تحديد السيارة
+  function selectCar(carName) {
+    document.getElementById("carInput").value = carName;
+    document.getElementById("contact").scrollIntoView({ behavior: 'smooth' });
+  }
+  
+  // إرسال النموذج
+  document.getElementById('orderForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const form = e.target;
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const originalBtnText = submitBtn.innerHTML;
     
-    // تحديد السيارة والانتقال للنموذج
-    function selectCar(carName) {
-      document.getElementById("carInput").value = carName;
-      document.getElementById("contact").scrollIntoView({ behavior: 'smooth' });
-    }
-    
-    // إرسال النموذج إلى Google Sheets
-    document.getElementById('orderForm').addEventListener('submit', function(e) {
-      e.preventDefault();
-      const form = new FormData(this);
-      const submitBtn = this.querySelector('button[type="submit"]');
-      const originalBtnText = submitBtn.innerHTML;
-      
-      // تغيير نص الزر أثناء الإرسال
+    try {
       submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> جاري الإرسال...';
       submitBtn.disabled = true;
       
-      fetch(scriptURL, { method: 'POST', body: form })
-        .then(response => {
-          if (!response.ok) {
-            throw new Error('Network response was not ok');
-          }
-          return response.json();
-        })
-        .then(data => {
-          document.getElementById("responseMsg").innerHTML = `
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-              <strong>✅ تم إرسال طلبك بنجاح!</strong> سيتصل بك أحد ممثلينا خلال 24 ساعة.
-              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-          `;
-          this.reset();
-          submitBtn.innerHTML = originalBtnText;
-          submitBtn.disabled = false;
-          
-          // إرسال رسالة واتساب تلقائية
-          const phone = form.get('telephone');
-          const car = form.get('voiture');
-          const whatsappMsg = `مرحباً، شكراً لاهتمامك بسيارة ${car}. سنتصل بك قريباً للتفاصيل.`;
-          // window.open(`https://wa.me/213${phone}?text=${encodeURIComponent(whatsappMsg)}`, '_blank');
-        })
-        .catch(error => {
-          document.getElementById("responseMsg").innerHTML = `
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-              <strong>❌ حدث خطأ أثناء الإرسال!</strong> يرجى المحاولة مرة أخرى أو الاتصال بنا مباشرة.
-              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-          `;
-          submitBtn.innerHTML = originalBtnText;
-          submitBtn.disabled = false;
-          console.error('Error!', error.message);
-        });
-    });
-    
-    // إرسال إشعار تلغرام (مثال)
-    function sendTelegramNotification(formData) {
-      const botToken = 'YOUR_TELEGRAM_BOT_TOKEN';
-      const chatId = 'YOUR_CHAT_ID';
-      const text = `طلب جديد:\nالاسم: ${formData.get('nom')}\nالهاتف: ${formData.get('telephone')}\nالسيارة: ${formData.get('voiture')}`;
+      const formData = {
+        key: secretKey,
+        nom: form.nom.value,
+        telephone: form.telephone.value,
+        email: form.email.value,
+        voiture: form.voiture.value,
+        wilaya: form.wilaya.value,
+        payment: form.payment.value,
+        message: form.message.value
+      };
+
+      const response = await fetch(scriptURL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData)
+      });
+
+      if (!response.ok) throw new Error('Network error');
       
-      fetch(`https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(text)}`)
-        .then(response => response.json())
-        .then(data => console.log('Telegram notification sent:', data))
-        .catch(error => console.error('Error sending Telegram notification:', error));
+      const data = await response.json();
+      
+      if (data.status !== 'success') throw new Error(data.message);
+      
+      document.getElementById("responseMsg").innerHTML = `
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+          <strong>✅ ${data.message}</strong>
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      `;
+      
+      form.reset();
+      
+      // إرسال واتساب (اختياري)
+      const whatsappUrl = `https://wa.me/${formData.telephone.replace(/\D/g, '')}?text=${encodeURIComponent(
+        `مرحباً ${formData.nom}، شكراً لاهتمامك بسيارة ${formData.voiture}. سنتصل بك قريباً.`
+      )}`;
+      // window.open(whatsappUrl, '_blank');
+
+    } catch (error) {
+      document.getElementById("responseMsg").innerHTML = `
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+          <strong>❌ ${error.message || 'حدث خطأ أثناء الإرسال'}</strong>
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      `;
+      console.error('Error:', error);
+    } finally {
+      submitBtn.innerHTML = originalBtnText;
+      submitBtn.disabled = false;
     }
-    
-    // تحديث سنة حقوق النشر تلقائياً
-    document.getElementById('currentYear').textContent = new Date().getFullYear();
-  </script>
+  });
+
+  // تحديث سنة حقوق النشر
+  document.getElementById('currentYear').textContent = new Date().getFullYear();
+</script>
 </body>
 </html>
