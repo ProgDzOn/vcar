@@ -869,99 +869,83 @@
   </a>
 
   <!-- السكريبتات -->
-<script>
-  // رابط Google Script (استبدل بآخر نشر لك)
-  const scriptURL = 'https://script.google.com/macros/s/AKfycbzLtdl6SwBiKN-KVwdB0d0eUhc1s1mZvYxKKZEi97K1S775wJzw2vkyWVp-RFcEkOanZw/exec';
-  const secretKey = 'AutoMarket_Algeria_2023@SECURE';
+    </script> 
+const scriptURL = 'https://script.google.com/macros/s/AKfycbzLtdl6SwBiKN-KVwdB0d0eUhc1s1mZvYxKKZEi97K1S775wJzw2vkyWVp-RFcEkOanZw/exec';
+const secretKey = 'AutoMarket_Algeria_2023@SECURE';
 
-  // تحديد السيارة المطلوبة
-  function selectCar(carName) {
-    document.getElementById("carInput").value = carName;
-    document.getElementById("contact").scrollIntoView({ 
-      behavior: 'smooth' 
-    });
-  }
+async function submitForm(form) {
+  const submitBtn = form.querySelector('button[type="submit"]');
+  const responseDiv = document.getElementById('responseMsg');
   
-  // إرسال النموذج
-  document.getElementById('orderForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    const form = e.target;
-    const submitBtn = form.querySelector('button[type="submit"]');
-    const responseDiv = document.getElementById("responseMsg");
+  try {
+    // عرض حالة التحميل
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الإرسال...';
+    responseDiv.innerHTML = '';
     
-    try {
-      // عرض حالة التحميل
-      submitBtn.disabled = true;
-      submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الإرسال...';
-      responseDiv.innerHTML = '';
-      
-      // تجهيز البيانات
-      const formData = {
-        key: secretKey,
-        nom: form.nom.value,
-        telephone: form.telephone.value,
-        email: form.email.value,
-        voiture: form.voiture.value,
-        wilaya: form.wilaya.value,
-        payment: form.payment.value,
-        message: form.message.value
-      };
+    // تجهيز البيانات
+    const formData = {
+      key: secretKey,
+      nom: form.nom.value,
+      telephone: form.telephone.value,
+      email: form.email.value,
+      voiture: form.voiture.value,
+      wilaya: form.wilaya.value,
+      payment: form.payment.value,
+      message: form.message.value
+    };
 
-      // إرسال البيانات
-      const response = await fetch(scriptURL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData)
-      });
-      
-      if (!response.ok) {
-        throw new Error('فشل في الاتصال بالخادم');
-      }
-      
-      const result = await response.json();
-      
-      if (result.status !== 'success') {
-        throw new Error(result.message);
-      }
-      
-      // عرض رسالة النجاح
-      responseDiv.innerHTML = `
-        <div class="alert alert-success alert-dismissible fade show">
-          <strong>✅ ${result.message}</strong>
-          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-      `;
-      
-      // إعادة تعيين النموذج
-      form.reset();
-      
-      // إرسال رسالة واتساب (اختياري)
-      const whatsappUrl = `https://wa.me/${formData.telephone.replace(/\D/g, '')}?text=${encodeURIComponent(
-        `مرحباً ${formData.nom}، شكراً لحجزك ${formData.voiture}. سنتصل بك قريباً.`
-      )}`;
-      // window.open(whatsappUrl, '_blank');
-      
-    } catch (error) {
-      // عرض رسالة الخطأ
-      responseDiv.innerHTML = `
-        <div class="alert alert-danger alert-dismissible fade show">
-          <strong>❌ ${error.message}</strong>
-          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-      `;
-      console.error('Error:', error);
-      
-    } finally {
-      // إعادة تعيين الزر
-      submitBtn.disabled = false;
-      submitBtn.innerHTML = 'إرسال الطلب';
+    // إرسال البيانات
+    const response = await fetch(scriptURL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(formData),
+      redirect: 'follow'
+    });
+
+    if (!response.ok) {
+      throw new Error('فشل في الاتصال بالخادم');
     }
-  });
+    
+    const result = await response.json();
+    
+    if (result.status !== 'success') {
+      throw new Error(result.message);
+    }
+    
+    // عرض رسالة النجاح
+    showAlert('success', result.message);
+    form.reset();
+    
+  } catch (error) {
+    // عرض رسالة الخطأ
+    showAlert('danger', error.message);
+    console.error('Error:', error);
+    
+  } finally {
+    // إعادة تعيين الزر
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = 'إرسال الطلب';
+  }
+}
 
-  // تحديث سنة حقوق النشر تلقائياً
-  document.getElementById('currentYear').textContent = new Date().getFullYear();
-</script>
+function showAlert(type, message) {
+  const alertDiv = document.createElement('div');
+  alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+  alertDiv.innerHTML = `
+    ${message}
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+  `;
+  document.getElementById('responseMsg').appendChild(alertDiv);
+}
+
+// ربط حدث الإرسال
+document.getElementById('orderForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+  submitForm(e.target);
+});
+  </script> 
 </body>
 </html>
