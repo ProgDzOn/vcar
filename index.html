@@ -869,61 +869,79 @@
   </a>
 
   <!-- السكريبتات -->
- 
-<script>
-  document.getElementById('orderForm').addEventListener('submit', async function(e) {
-  e.preventDefault();
-  
-  const submitBtn = this.querySelector('button[type="submit"]');
-  const originalBtnText = submitBtn.innerHTML;
-  
-  try {
-    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> جاري الإرسال...';
-    submitBtn.disabled = true;
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // رابط Google Script الخاص بك
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbwY366aZLAY-kkp0pRzcCPJ74O9gcNHll8ga52AzJWKMS_j0PNiWVtubSdw4tbYfnM7vQ/exec';
     
-    const formData = {
-      key: 'AutoMarket_Algeria_2023@SECURE', // يجب أن يتطابق مع CONFIG.secretKey
-      nom: document.getElementById('fullName').value,
-      telephone: document.getElementById('phone').value,
-      email: document.getElementById('email').value,
-      voiture: document.getElementById('carInput').value,
-      wilaya: document.getElementById('wilaya').value,
-      payment: document.getElementById('payment').value,
-      message: document.getElementById('message').value
-    };
-    
-    const response = await fetch('https://script.google.com/macros/s/AKfycbwY366aZLAY-kkp0pRzcCPJ74O9gcNHll8ga52AzJWKMS_j0PNiWVtubSdw4tbYfnM7vQ/exec', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(formData)
-    });
-    
-    const result = await response.json();
-    
-    if (result.status === 'success') {
-      document.getElementById('responseMsg').innerHTML = `
-        <div class="alert alert-success">
-          ${result.message}
-        </div>
-      `;
-      this.reset();
-    } else {
-      throw new Error(result.message);
+    // تحديد السيارة والانتقال للنموذج
+    function selectCar(carName) {
+      document.getElementById("carInput").value = carName;
+      document.getElementById("contact").scrollIntoView({ behavior: 'smooth' });
     }
     
-  } catch (error) {
-    document.getElementById('responseMsg').innerHTML = `
-      <div class="alert alert-danger">
-        ${error.message}
-      </div>
-    `;
-  } finally {
-    submitBtn.innerHTML = originalBtnText;
-    submitBtn.disabled = false;
-  }
-});
+    // إرسال النموذج إلى Google Sheets
+    document.getElementById('orderForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const form = new FormData(this);
+      const submitBtn = this.querySelector('button[type="submit"]');
+      const originalBtnText = submitBtn.innerHTML;
+      
+      // تغيير نص الزر أثناء الإرسال
+      submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> جاري الإرسال...';
+      submitBtn.disabled = true;
+      
+      fetch(scriptURL, { method: 'POST', body: form })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Network response was not ok');
+          }
+          return response.json();
+        })
+        .then(data => {
+          document.getElementById("responseMsg").innerHTML = `
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+              <strong>✅ تم إرسال طلبك بنجاح!</strong> سيتصل بك أحد ممثلينا خلال 24 ساعة.
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+          `;
+          this.reset();
+          submitBtn.innerHTML = originalBtnText;
+          submitBtn.disabled = false;
+          
+          // إرسال رسالة واتساب تلقائية
+          const phone = form.get('telephone');
+          const car = form.get('voiture');
+          const whatsappMsg = `مرحباً، شكراً لاهتمامك بسيارة ${car}. سنتصل بك قريباً للتفاصيل.`;
+          // window.open(`https://wa.me/213${phone}?text=${encodeURIComponent(whatsappMsg)}`, '_blank');
+        })
+        .catch(error => {
+          document.getElementById("responseMsg").innerHTML = `
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+              <strong>❌ حدث خطأ أثناء الإرسال!</strong> يرجى المحاولة مرة أخرى أو الاتصال بنا مباشرة.
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+          `;
+          submitBtn.innerHTML = originalBtnText;
+          submitBtn.disabled = false;
+          console.error('Error!', error.message);
+        });
+    });
+    
+    // إرسال إشعار تلغرام (مثال)
+    function sendTelegramNotification(formData) {
+      const botToken = 'YOUR_TELEGRAM_BOT_TOKEN';
+      const chatId = 'YOUR_CHAT_ID';
+      const text = `طلب جديد:\nالاسم: ${formData.get('nom')}\nالهاتف: ${formData.get('telephone')}\nالسيارة: ${formData.get('voiture')}`;
+      
+      fetch(`https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(text)}`)
+        .then(response => response.json())
+        .then(data => console.log('Telegram notification sent:', data))
+        .catch(error => console.error('Error sending Telegram notification:', error));
+    }
+    
+    // تحديث سنة حقوق النشر تلقائياً
+    document.getElementById('currentYear').textContent = new Date().getFullYear();
   </script>
 </body>
 </html>
