@@ -870,83 +870,60 @@
 
   <!-- السكريبتات -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-  // تحديد السنة الحالية للفوتر
-  document.getElementById('currentYear').textContent = new Date().getFullYear();
-  
-  // دالة لتحديد السيارة في نموذج الحجز
-  function selectCar(carName) {
-    document.getElementById('carInput').value = carName;
-    document.getElementById('contact').scrollIntoView({ behavior: 'smooth' });
-  }
-  
-  // التحقق من رقم الهاتف
-  document.getElementById('phone').addEventListener('input', function(e) {
-    this.value = this.value.replace(/[^0-9+]/g, '');
-  });
+  <script>
+    // سنة الفوتر
+    document.getElementById('currentYear').textContent = new Date().getFullYear();
 
-  // معالجة إرسال النموذج المعدلة
-  const scriptURL = 'https://script.google.com/macros/s/AKfycbw1_U_v4B42qGqbYMCNdeu5SUGAWM8_6MtYBZzlZ2LNDB6cbzrWzVUv1iv9b7SZ8ZjqGw/exec';
-  
-  document.getElementById('orderForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    const form = e.target;
-    const submitBtn = form.querySelector('button[type="submit"]');
-    const originalBtnText = submitBtn.innerHTML;
-    const messageDiv = document.getElementById('responseMsg');
-    
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> جاري الإرسال...';
-    messageDiv.classList.add('d-none');
+    // حماية رقم الهاتف
+    document.getElementById('phone').addEventListener('input', function(e) {
+      this.value = this.value.replace(/[^0-9+]/g, '');
+    });
 
-    try {
-      // تحويل FormData إلى كائن JSON
-      const formData = {
-        nom: form.elements['nom'].value,
-        telephone: form.elements['telephone'].value,
-        email: form.elements['email'].value,
-        voiture: form.elements['voiture'].value,
-        wilaya: form.elements['wilaya'].value,
-        payment: form.elements['payment'].value,
-        message: form.elements['message'].value
-      };
+    // رابط سكريبت Google Apps Script
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbw1_U_v4B42qGqbYMCNdeu5SUGAWM8_6MtYBZzlZ2LNDB6cbzrWzVUv1iv9b7SZ8ZjqGw/exec';
 
-      const response = await fetch(scriptURL, {
-        method: 'POST',
-        body: JSON.stringify(formData),
-        headers: {
-          'Content-Type': 'application/json'
+    // إرسال النموذج
+    document.getElementById('orderForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const form = e.target;
+      const submitBtn = form.querySelector('button[type="submit"]');
+      const originalBtnText = submitBtn.innerHTML;
+      const messageDiv = document.getElementById('responseMsg');
+
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> جاري الإرسال...';
+      messageDiv.classList.add('d-none');
+
+      try {
+        const formData = new FormData(form);
+        const data = {};
+        formData.forEach((value, key) => data[key] = value);
+
+        const response = await fetch(scriptURL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+
+        const result = await response.json();
+
+        if (result.status === "success") {
+          messageDiv.className = 'alert alert-success text-center mt-3';
+          messageDiv.innerHTML = `<i class="fas fa-check-circle me-2"></i> ${result.message}`;
+          form.reset();
+        } else {
+          throw new Error(result.message || 'فشل في إرسال البيانات');
         }
-      });
-
-      const result = await response.json();
-      
-      if (result.status === "success") {
-        messageDiv.classList.remove('d-none', 'alert-danger');
-        messageDiv.classList.add('alert-success');
-        messageDiv.innerHTML = `<i class="fas fa-check-circle me-2"></i> ${result.message || 'تم إرسال طلبك بنجاح! سنتصل بك قريباً.'}`;
-        form.reset();
-      } else {
-        throw new Error(result.message || 'فشل في إرسال البيانات');
+      } catch (error) {
+        messageDiv.className = 'alert alert-danger text-center mt-3';
+        messageDiv.innerHTML = `<i class="fas fa-exclamation-circle me-2"></i> حدث خطأ: ${error.message}`;
+      } finally {
+        messageDiv.classList.remove('d-none');
+        submitBtn.innerHTML = originalBtnText;
+        submitBtn.disabled = false;
       }
-    } catch (error) {
-      console.error('Error:', error);
-      messageDiv.classList.remove('d-none', 'alert-success');
-      messageDiv.classList.add('alert-danger');
-      messageDiv.innerHTML = `<i class="fas fa-exclamation-circle me-2"></i> ${error.message || 'حدث خطأ أثناء إرسال الطلب. يرجى المحاولة مرة أخرى.'}`;
-      
-      // إعادة المحاولة التلقائية بعد 5 ثواني
-      setTimeout(() => {
-        messageDiv.innerHTML += '<div class="mt-2">جاري إعادة المحاولة تلقائياً...</div>';
-        setTimeout(() => {
-          form.dispatchEvent(new Event('submit'));
-        }, 5000);
-      }, 2000);
-    } finally {
-      submitBtn.innerHTML = originalBtnText;
-      submitBtn.disabled = false;
-    }
-  });
-</script>
+    });
+  </script>
+
 </body>
 </html>
