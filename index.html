@@ -869,7 +869,7 @@
   </a>
 
   <!-- السكريبتات -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script>
     // سنة الفوتر
     document.getElementById('currentYear').textContent = new Date().getFullYear();
@@ -878,6 +878,12 @@
     document.getElementById('phone').addEventListener('input', function(e) {
       this.value = this.value.replace(/[^0-9+]/g, '');
     });
+
+    // تحديد السيارة
+    function selectCar(carName) {
+      document.getElementById('carInput').value = carName;
+      document.getElementById('contact').scrollIntoView({ behavior: 'smooth' });
+    }
 
     // رابط سكريبت Google Apps Script
     const scriptURL = 'https://script.google.com/macros/s/AKfycbw1_U_v4B42qGqbYMCNdeu5SUGAWM8_6MtYBZzlZ2LNDB6cbzrWzVUv1iv9b7SZ8ZjqGw/exec';
@@ -924,6 +930,5 @@
       }
     });
   </script>
-
 </body>
 </html>
